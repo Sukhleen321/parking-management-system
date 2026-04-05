@@ -213,7 +213,9 @@ async def vehicle_exit(exit_data: schemas.VehicleExit, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="No active parking session for this vehicle")
 
     exit_time = datetime.utcnow()
-    duration_seconds = (exit_time - record.entry_time).total_seconds()
+    # Ensure entry_time is naive to avoid timezone mismatch errors with Postgres timestamps
+    entry_time_naive = record.entry_time.replace(tzinfo=None) if record.entry_time.tzinfo else record.entry_time
+    duration_seconds = (exit_time - entry_time_naive).total_seconds()
     total_hours = max(duration_seconds / 3600, 0.25)  # Minimum 15 minutes charge
 
     vehicle_type = db.query(models.VehicleType).filter(
@@ -256,7 +258,9 @@ def preview_exit(vehicle_number: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No active parking session")
 
     now = datetime.utcnow()
-    duration_seconds = (now - record.entry_time).total_seconds()
+    # Ensure entry_time is naive to avoid timezone mismatch errors with Postgres timestamps
+    entry_time_naive = record.entry_time.replace(tzinfo=None) if record.entry_time.tzinfo else record.entry_time
+    duration_seconds = (now - entry_time_naive).total_seconds()
     total_hours = max(duration_seconds / 3600, 0.25)
 
     vehicle_type = db.query(models.VehicleType).filter(

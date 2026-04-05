@@ -7,14 +7,22 @@ const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 async function api(method, path, body) {
-  const res = await fetch(`${API}${path}`, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${API}${path}`, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (err) {
+    if (err.message.includes("Failed to fetch")) {
+      throw new Error("Unable to connect to server. Please try again.");
+    }
+    throw err;
+  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Request failed");
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Request failed with status " + res.status);
   }
   return res.json();
 }
