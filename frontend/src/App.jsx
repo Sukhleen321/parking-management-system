@@ -99,8 +99,42 @@ export default function App() {
     entry: <VehicleEntry vtypes={vtypes} onSuccess={(msg) => { notify(msg); refreshStats(); }} />,
     exit: <VehicleExit records={records} vtypes={vtypes} onSuccess={(msg) => { notify(msg); refreshStats(); }} />,
     records: <RecordsView records={records} />,
-    admin: <AdminPanel vtypes={vtypes} setVtypes={setVtypes} slots={slots} onSuccess={notify} />,
+    admin: adminUnlocked ? (
+  <AdminPanel vtypes={vtypes} setVtypes={setVtypes} slots={slots} onSuccess={notify} />
+) : (
+  <div className="max-w-sm mx-auto mt-20">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 space-y-4">
+      <p className="text-xs font-mono tracking-widest text-gray-500 uppercase text-center">Admin Access Required</p>
+      <div className="text-center text-4xl">🔒</div>
+      {adminError && <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg p-3 text-sm text-center">Wrong password</div>}
+      <input
+        type="password"
+        placeholder="Enter admin password"
+        value={adminPass}
+        onChange={e => { setAdminPass(e.target.value); setAdminError(false); }}
+        onKeyDown={e => {
+          if (e.key === "Enter") {
+            if (adminPass === "admin123") { setAdminUnlocked(true); setAdminError(false); }
+            else { setAdminError(true); setAdminPass(""); }
+          }
+        }}
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm font-mono focus:border-cyan-400 focus:outline-none text-center tracking-widest"
+      />
+      <button
+        onClick={() => {
+          if (adminPass === "admin123") { setAdminUnlocked(true); setAdminError(false); }
+          else { setAdminError(true); setAdminPass(""); }
+        }}
+        className="w-full py-2.5 bg-cyan-400 text-gray-900 rounded-lg font-bold text-sm">
+        Unlock Admin Panel
+      </button>
+    </div>
+  </div>
+),
   };
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminPass, setAdminPass] = useState("");
+  const [adminError, setAdminError] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-gray-950 text-gray-100 font-sans">
